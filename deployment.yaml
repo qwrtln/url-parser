@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: url-parser
+  labels:
+    app: url-parser
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: url-parser
+  template:
+    metadata:
+      labels:
+        app: url-parser
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: python-app
+        image: url-parser:latest-daemon
+        args:
+          - "-u"
+          - "https://youtube.com"
+          - "-u"
+          - "https://google.com"
+          - "-u"
+          - "https://news.ycombinator.com"
+          - "-u"
+          - "https://arstechnica.com"
+          - "-o"
+          - "json"
+        ports:
+        - containerPort: 8000
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
