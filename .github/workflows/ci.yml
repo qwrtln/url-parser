@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    name: Build images
     strategy:
       fail-fast: false
       matrix:
@@ -18,8 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-
-      - name: Modify script
+      - name: "Modify script according to purpose: ${{ matrix.kind }}"
         if: matrix.kind == 'daemon'
         run: |
           cat daemon_snippet.txt >> main.py
@@ -46,3 +46,35 @@ jobs:
         with:
           name: ${{ env.TARBALL_NAME }}
           path: ${{ env.TARBALL_NAME }}
+
+  run:
+    runs-on: ubuntu-latest
+    name: Run images
+    needs: build
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: url-parser-script.tar
+          path: .
+
+      - name: Load image
+        run: docker load -i url-parser-script.tar
+
+      - name: Run image in stdout mode
+        run: |
+          docker run url-parser:latest-script \
+            -u https://youtube.com \
+            -u https://google.com \
+            -u https://news.ycombinator.com \
+            -u https://arstechnica.com \
+            -o stdout
+
+      - name: Run image in json mode
+        run: |
+          docker run url-parser:latest-script \
+            -u https://youtube.com \
+            -u https://google.com \
+            -u https://news.ycombinator.com \
+            -u https://arstechnica.com \
+            -o json | jq
+
