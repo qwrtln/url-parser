@@ -31,15 +31,18 @@ jobs:
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
       - name: Save image to tar
-        run: docker save ${{ env.IMAGE_TAG }} > url-parser-${{ matrix.kind }}.tar
+        run: |
+          TARBALL_NAME="url-parser-${{ matrix.kind }}.tar"
+          docker save ${{ env.IMAGE_TAG }} > $TARBALL_NAME
+          echo "TARBALL_NAME=$TARBALL_NAME" >> $GITHUB_ENV
 
       - name: Run Trivy vulnerability scanner in tarball mode
         uses: aquasecurity/trivy-action@0.29.0
         with:
-          input: url-parser-${{ matrix.kind }}.tar
+          input: ${{ env.TARBALL_NAME }}
           severity: 'CRITICAL,HIGH'
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.IMAGE_TAG }}
-          path: "*.tar"
+          name: ${{ env.TARBALL_NAME }}
+          path: ${{ env.TARBALL_NAME }}
