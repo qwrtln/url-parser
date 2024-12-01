@@ -1,0 +1,38 @@
+name: Run URL parser CI
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - kind: script
+          - kind: daemon
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Modify script
+        if: matrix.kind == 'daemon'
+        run: |
+          cat daemon_snippet.txt >> main.py
+
+      - name: Build
+        uses: docker/build-push-action@v6
+        with:
+          tags: url-parser:latest-${{ matrix.kind }}
+
+      - name: Check
+        run: which docker
